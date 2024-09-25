@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Water Scout</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 50vh;
+      width: 90%;
+      max-width: 1000px;
+      margin: 20px auto;
+      border: 2px solid #007bff;
+      border-radius: 20px;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .search-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    #searchInput {
+      padding: 10px;
+      width: 70%;
+      max-width: 300px;
+      border: 2px solid #007bff;
+      border-radius: 20px;
+      outline: none;
+      font-size: 16px;
+      margin-top: 15px;
+    }
+    #searchBtn {
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+      margin-top: 15px;
+    }
+    .header {
+      background-color: rgb(116, 168, 245);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+      font-size: xx-large;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      position: relative;
+    }
+    nav {
+      background-color: #333;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    button[type="Input"] {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Water Scout</h1>
+    <img src="./water.png" alt="water" width="80px" height="80px" style="border:1px solid #ffffff; margin:5px">
+  </div>
+  <nav>
+    <a href="./map-search.html">Home</a>
+    <a href="./Water-analysis.html">Check Your Water</a>
+    <a href="./about.html#about">About</a>
+    <a href="./about.html#methods">Methods</a>
+    <a href="./about.html#contact">Contact</a>
+  </nav>
+  <!-- Search input field -->
+  <div class="search-container">
+    <!-- Search input field -->
+    <input type="text" id="searchInput" placeholder="Search for a location">
+    <!-- Search button -->
+    <button id="searchBtn">Search</button>
+  </div>
+  <!-- Map container -->
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    let map;
+    let markers = [];
+    let userLocations = [{lat: 10.0531, lng: 76.3528}, {lat: 10.0827, lng: 76.2707}, {lat: 9.8850, lng: 76.4867}]; // Example user locations
+
+    function initMap() {
+      // Initialize map centered at a default location
+      map = L.map('map').setView([12.9716, 77.5946], 8);
+
+      // Initialize OpenStreetMap layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Add event listener for input field
+      document.getElementById("searchBtn").addEventListener("click", function() {
+        searchLocation();
+      });
+    }
+
+    function searchLocation() {
+      const searchInput = document.getElementById("searchInput").value;
+
+      // Perform a Leaflet search
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + searchInput)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            // Center the map on the first result
+            map.setView([data[0].lat, data[0].lon], 14);
+
+            // Clear previous markers
+            clearMarkers();
+
+            // Add a marker for the searched location
+            addMarker([data[0].lat, data[0].lon], 'red', 'Searched Location');
+
+            // Add markers for user locations
+            userLocations.forEach(function(location) {
+              addMarker([location.lat, location.lng], 'blue', 'Rating-9\nWater is excellent. Suitable for drinking and all other purposes');
+            });
+          } else {
+            alert("Location not found");
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
+    }
+
+    function addMarker(location, color, popupContent) {
+      // Create a marker
+      const marker = L.marker(location, {
+        icon: L.icon({
+          iconUrl: 'http://maps.google.com/mapfiles/ms/icons/' + color + '-dot.png',
+        })
+      }).addTo(map);
+
+      // Create a popup info window
+      const popup = L.popup()
+        .setContent(popupContent);
+      
+      marker.bindPopup(popup);
+
+      // Save the marker to the markers array
+      markers.push(marker);
+    }
+
+    function clearMarkers() {
+      // Remove markers from the map
+      markers.forEach(function(marker) {
+        map.removeLayer(marker);
+      });
+
+      // Clear the markers array
+      markers = [];
+    }
+
+    function goToAnotherPage() {
+      window.location.href = "forms.html";
+    }
+
+    // Initialize the map when the page is loaded
+    initMap();
+  </script>
+  <button onclick="goToAnotherPage()" type="Input">Add Review</button>
+</body>
+</html>
